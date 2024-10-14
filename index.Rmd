@@ -11,4 +11,4 @@ output:
 
 ## Project thoughts
 
-I am interested in exploring data related to education and politics, or policies related to education and youth.
+Do most attacks targeted at journalists occur around protests? In this study, I will use the U.S. Press Freedom Tracker's Incidents Database (https://pressfreedomtracker.us/all-incidents/?endpage=3) to measure if the occurrence of a protest effects the likelihood of an attack targeted at a journalist. I hypothesize that protesting does spark journalist attacks. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is protests in the U.S. that turn violent. The outcome variable I will measure if how many of those protests include attacks on journalists. The observed pattern will be correlation between violence at protests and journalists.
