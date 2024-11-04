@@ -11,7 +11,7 @@ output:
 
 ## Project thoughts
 
-Do most attacks targeted at journalists occur around protests? In this study, I will use the U.S. Press Freedom Tracker's Incidents Database (https://pressfreedomtracker.us/all-incidents/?endpage=3) to measure if the occurrence of a protest effects the likelihood of an attack targeted at a journalist. I hypothesize that protesting does spark journalist attacks. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is protests in the U.S. that turn violent. The outcome variable I will measure if how many of those protests include attacks on journalists. The observed pattern will be correlation between violence at protests and journalists.
+Is there a correlation between attacks on U.S. jouranlists and location? In this study, I will use the U.S. Press Freedom Tracker's Incidents Database (https://pressfreedomtracker.us/all-incidents/?endpage=3) to measure if the occurrence of a protest effects the likelihood of an attack targeted at a journalist. I hypothesize that some states have more incidents than others. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is states. The outcome variable I will measure is which states in the U.S. have the most attacks on journalists, and if this correlates to dominant ideologies in those states. The observed pattern will be correlation between states and attacks on journalists.
 
 
 ```{r}
@@ -26,9 +26,10 @@ incidents
 
 ```{r}
 incidents_plot <- incidents |>
-  group_by(categories, was_journalist_targeted) |>
-  ggplot(aes(x = was_journalist_targeted, y = categories)) +
-  geom_col()
+  group_by(state, was_journalist_targeted) |>
+  ggplot(aes(x = was_journalist_targeted, y = state)) +
+  geom_boxplot() +
+  labs(x = "Was Journalist Targeted", y = "State", title = "Incidents of U.S. Journalists Targeted By State")
 incidents_plot
 ```
 
