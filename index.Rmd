@@ -19,10 +19,17 @@ library(tidyverse)
 ```
 
 ```{r}
-incidents <- read_csv("incidents.csv")
+incidents <- read_csv("~/incidents.csv")
 incidents
 ```
 
 
+```{r}
+incidents_plot <- incidents |>
+  group_by(categories, was_journalist_targeted) |>
+  ggplot(aes(x = was_journalist_targeted, y = categories)) +
+  geom_col()
+incidents_plot
+```
 
 
