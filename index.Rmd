@@ -23,14 +23,36 @@ incidents <- read_csv("~/incidents.csv")
 incidents
 ```
 
+```{r}
+incidents |>
+  mutate(region = case_when(state == `Minnesota (MN)` | state == `Indiana (IN)` | state == `Ohio (OH)` | state == `Wisconsin (WI)` ~ "Midwest"))
+```
+
+```{r}
+incidents |>
+  if(state == `Minnesota (MN)` || state == `Indiana (IN)` || state == `Ohio (OH)` || state == `Wisconsin (WI)`) {mutate(region = "Midwest")}
+else if(state == `Maine (ME)` || state == `Rhode Island (RD)`){mutate(region = "Northeast")}
+```
+
+
 
 ```{r}
 incidents_plot <- incidents |>
   group_by(state, was_journalist_targeted) |>
+  summarize(mean(state, na.rm = TRUE)) |>
   ggplot(aes(x = was_journalist_targeted, y = state)) +
   geom_boxplot() +
   labs(x = "Was Journalist Targeted", y = "State", title = "Incidents of U.S. Journalists Targeted By State")
 incidents_plot
 ```
 
+California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.
 
+```{r}
+incidents_table <- incidents |>
+  group_by(was_journalist_targeted, state) |>
+  summarize(was_journalist_targeted, state)
+incidents_table
+
+knitr::kable(incidents_table)
+```
