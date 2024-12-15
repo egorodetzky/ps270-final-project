@@ -83,25 +83,25 @@ incidents_region <- incidents |>
 incidents_region
 ```
 ```{r}
-incidents_plot <- incidents_region |>
+incidents_plot_region <- incidents_region |>
   group_by(was_journalist_targeted) |>
   summarize(region) |>
   ggplot(aes(x = was_journalist_targeted, y = region)) +
   geom_col() +
   labs(x = "Was Journalist Targeted", y = "U.S. Region", title = "Incidents of U.S. Journalists Targeted By State")
-incidents_plot
+incidents_plot_region
 ```
 
 
 
 ```{r}
-incidents_plot <- incidents |>
+incidents_plot_state <- incidents |>
   group_by(state, was_journalist_targeted) |>
   summarize(mean(state, na.rm = TRUE)) |>
   ggplot(aes(x = was_journalist_targeted, y = state)) +
   geom_boxplot() +
   labs(x = "Was Journalist Targeted", y = "State", title = "Incidents of U.S. Journalists Targeted By State")
-incidents_plot
+incidents_plot_state
 ```
 
 California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.
