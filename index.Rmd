@@ -22,16 +22,74 @@ library(tidyverse)
 incidents <- read_csv("~/incidents.csv")
 incidents
 ```
-
+cces |>
+mutate(educ_ordinal = case_when(educ=="No HS" ~ 0,
+educ=="High school graduate" ~ 1,
+educ=="Some college" ~ 2,
+educ=="2-year" ~ 3,
+educ=="4-year" ~ 4,
+educ=="Post-grad" ~ 5,)) |>
+select(educ, educ_ordinal)
 ```{r}
-incidents |>
-  mutate(region = case_when(state == `Minnesota (MN)` | state == `Indiana (IN)` | state == `Ohio (OH)` | state == `Wisconsin (WI)` ~ "Midwest"))
+incidents_region <- incidents |>
+  mutate(region = case_when(state == "Washington (WA)" ~ 0,
+                            state == "Oregon (OR)" ~ 0,
+                            state == "California (CA)" ~ 0,
+                            state == "Idaho (ID)" ~ 0,
+                            state == "Nevada (NV)" ~ 0,
+                            state == "Montana (MT)" ~ 0,
+                            state == "Wyoming (WY)" ~ 0,
+                            state == "Utah (UT)" ~ 0,
+                            state == "Colorado (CO)" ~ 0,
+                            state == "Arizona (AZ)" ~ 1,
+                            state == "New Mexico(NM)" ~ 1,
+                            state == "Texas (TX)" ~ 1,
+                            state == "Oklahoma (OK)" ~ 1,
+                            state == "North Dakota (ND)" ~ 2,
+                            state == "South Dakota (SD)" ~ 2,
+                            state == "Nebraska (NB)" ~ 2,
+                            state == "Kansas (KS)" ~ 2,
+                            state == "Minnesota (MN)" ~ 2,
+                            state == "Iowa (IA)" ~ 2,
+                            state == "Missouri (MO)" ~ 2,
+                            state == "Wisconsin (WI)" ~ 2,
+                            state == "Illinois (IL)" ~ 2,
+                            state == "Michigan (MI)" ~ 2,
+                            state == "Indiana (IN)" ~ 2,
+                            state == "Ohio (OH)" ~ 2,
+                            state == "Arkansas (AR)" ~ 3,
+                            state == "Louisiana (LA)" ~ 3,
+                            state == "Mississippi (MS)" ~ 3,
+                            state == "Alabama (AL)" ~ 3,
+                            state == "Kentucky (KY)" ~ 3,
+                            state == "Tennesee (TN)" ~ 3,
+                            state == "Georgia (GA)" ~ 3,
+                            state == "Florida (FL)" ~ 3,
+                            state == "West Virginia (WV)" ~ 3,
+                            state == "Virginia (VA)" ~ 3,
+                            state == "North Carolina (NC)" ~ 3,
+                            state == "South Carolina (SC)" ~ 3,
+                            state == "Maine (ME)" ~ 4,
+                            state == "Vermont (VT)" ~ 4,
+                            state == "New Hampshire (NH)" ~ 4,
+                            state == "Massachusetts (MA)" ~ 4,
+                            state == "Connecticut (CT)" ~ 4,
+                            state == "Rhode Island (RI)" ~ 4,
+                            state == "New York (NY)" ~ 4,
+                            state == "New Jersey (NJ)" ~ 4,
+                            state == "Pennsylvania (PA)" ~ 4,
+                            state == "Maryland (MD)" ~ 4,
+                            state == "Delaware (DE)" ~ 4))
+incidents_region
 ```
-
 ```{r}
-incidents |>
-  if(state == `Minnesota (MN)` || state == `Indiana (IN)` || state == `Ohio (OH)` || state == `Wisconsin (WI)`) {mutate(region = "Midwest")}
-else if(state == `Maine (ME)` || state == `Rhode Island (RD)`){mutate(region = "Northeast")}
+incidents_plot <- incidents_region |>
+  group_by(was_journalist_targeted) |>
+  summarize(region) |>
+  ggplot(aes(x = was_journalist_targeted, y = region)) +
+  geom_col() +
+  labs(x = "Was Journalist Targeted", y = "U.S. Region", title = "Incidents of U.S. Journalists Targeted By State")
+incidents_plot
 ```
 
 
