@@ -9,27 +9,21 @@ output:
 
 
 
-## Project thoughts
+## Introduction
 
-Is there a correlation between attacks on U.S. jouranlists and location? In this study, I will use the U.S. Press Freedom Tracker's Incidents Database (https://pressfreedomtracker.us/all-incidents/?endpage=3) to measure if the occurrence of a protest effects the likelihood of an attack targeted at a journalist. I hypothesize that some states have more incidents than others. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is states. The outcome variable I will measure is which states in the U.S. have the most attacks on journalists, and if this correlates to dominant ideologies in those states. The observed pattern will be correlation between states and attacks on journalists.
+Is there a correlation between attacks on journalists and location? In this study, I will use the U.S. Press Freedom Tracker's Incidents Database (https://pressfreedomtracker.us/all-incidents/?endpage=3) to measure if the likelihood of an attack targeted at a journalist correlates to location in the United States, looking specifically at region and state. I hypothesize that some states have more incidents than others. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is states. The variable I will create is region, using the states variable. The outcome variable I will measure is which states or regions in the U.S. have the most attacks on journalists. The observed pattern will be correlation between U.S. location and attacks on journalists.
+
+
+## Data
 
 
 ```{r}
 library(tidyverse)
-```
-
-```{r}
+library(infer)
 incidents <- read_csv("~/incidents.csv")
 incidents
 ```
-cces |>
-mutate(educ_ordinal = case_when(educ=="No HS" ~ 0,
-educ=="High school graduate" ~ 1,
-educ=="Some college" ~ 2,
-educ=="2-year" ~ 3,
-educ=="4-year" ~ 4,
-educ=="Post-grad" ~ 5,)) |>
-select(educ, educ_ordinal)
+
 ```{r}
 incidents_region <- incidents |>
   mutate(region = case_when(state == "Washington (WA)" ~ 0,
@@ -98,10 +92,6 @@ incidents_region <- incidents |>
                                                 was_journalist_targeted == "yes" ~ 2))
 incidents_region
 ```
-```{r}
-incidents_region |>
-  summarize(state, Region)
-```
 
 ```{r}
 incidents_plot_region <- incidents_region |>
@@ -120,18 +110,39 @@ incidents_plot_state <- incidents |>
   summarize(mean(state, na.rm = TRUE)) |>
   ggplot(aes(x = was_journalist_targeted, y = state)) +
   geom_boxplot() +
-  labs(x = "Was Journalist Targeted", y = "State", title = "Incidents of U.S. Journalists Targeted By State")
+  labs(x = "Was Journalist Targeted", y = "U.S. State", title = "Incidents of U.S. Journalists Targeted By State")
 incidents_plot_state
 ```
 
+
+## Results
+
+```{r}
+incidents_table_region <- incidents_region |>
+  group_by(was_journalist_targeted) |>
+  reframe(Region) |>
+  filter(was_journalist_targeted == "yes")
+incidents_table_region
+
+knitr::kable(incidents_table_region, col.names = c("Was Journalist Targeted", "U.S. Region"))
+```
+
+```{r}
+incidents_table_state <- incidents_region |>
+  group_by(was_journalist_targeted) |>
+  reframe(state) |>
+  filter(was_journalist_targeted == "yes")
+incidents_table_state
+
+knitr::kable(incidents_table, col.names = c("Was Journalist Targeted", "U.S. State"))
+```
 California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.
 
 ```{r}
-incidents_table <- incidents_region |>
-  group_by(was_journalist_targeted) |>
-  summarize(Region) |>
-  filter(was_journalist_targeted == "yes")
-incidents_table
-
-knitr::kable(incidents_table, col.names = c("Was Journalist Targeted", "Region"))
+lm(journalist_targeted_number ~ region + state, data = incidents_region)
 ```
+
+
+
+
+
