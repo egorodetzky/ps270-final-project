@@ -89,7 +89,8 @@ incidents_region <- incidents |>
   mutate(journalist_targeted_number = case_when(was_journalist_targeted == "no" ~ 0,
                                                 was_journalist_targeted == "None" ~ 0,
                                                 was_journalist_targeted == "unknown" ~ 1,
-                                                was_journalist_targeted == "yes" ~ 2))
+                                                was_journalist_targeted == "yes" ~ 2)) |>
+  mutate(journalist_targeted_yes_no = if_else(was_journalist_targeted == "yes", "Targeted", "Not Targeted"))
 incidents_region
 ```
 
@@ -118,6 +119,17 @@ incidents_plot_state
 ## Results
 
 ```{r}
+incidents_table_state <- incidents_region |>
+  group_by(was_journalist_targeted) |>
+  reframe(state) |>
+  filter(was_journalist_targeted == "yes")
+incidents_table_state
+
+knitr::kable(incidents_table_state, col.names = c("Was Journalist Targeted", "U.S. State"))
+```
+California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.
+
+```{r}
 incidents_table_region <- incidents_region |>
   group_by(was_journalist_targeted) |>
   reframe(Region) |>
@@ -127,21 +139,16 @@ incidents_table_region
 knitr::kable(incidents_table_region, col.names = c("Was Journalist Targeted", "U.S. Region"))
 ```
 
-```{r}
-incidents_table_state <- incidents_region |>
-  group_by(was_journalist_targeted) |>
-  reframe(state) |>
-  filter(was_journalist_targeted == "yes")
-incidents_table_state
-
-knitr::kable(incidents_table, col.names = c("Was Journalist Targeted", "U.S. State"))
-```
-California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.
+The region West has the most incidents of attacks targeted at journalists. I can hypothesize that this is because this region includes both California and Oregon, which had two of the highest number of targeted attacks on journalists according to the previous table. The next highest was Northeast, which I can hypothesize is because it includes District of Columbia and New York.
 
 ```{r}
-lm(journalist_targeted_number ~ region + state, data = incidents_region)
+lm(journalist_targeted_number ~ Region, data = incidents_region)
 ```
+The region West has a coefficient of 1.190e+00, which is the highest of all the regions. This is significant because the West had the highest number of targeted attacks on journalists, meaning we can interpret the data causally.
 
+## Conclusion
+
+My hypothesis was that there would be a correlation between location and targeted attacks on journalist across the U.S. After interpreting the data, I can conclude that there is a correlation. The graphs and tables show that the West region had the most incidents of attacks targeted against journalist, as well as state with big cities. I can conclude that there is a correlation, however, this cannot be interpreted causally because it does not factor in other variables, such as if protests occurred around the time of the incidents, or if other significant events happened that may have given another reason for the targeted attacks.
 
 
 

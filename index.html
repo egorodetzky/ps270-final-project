@@ -1543,16 +1543,14 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </div>
 
 <div class="d-article">
-<h2 id="project-thoughts">Project thoughts</h2>
-<p>Is there a correlation between attacks on U.S. jouranlists and location? In this study, I will use the U.S. Press Freedom Tracker’s Incidents Database (<a href="https://pressfreedomtracker.us/all-incidents/?endpage=3" class="uri">https://pressfreedomtracker.us/all-incidents/?endpage=3</a>) to measure if the occurrence of a protest effects the likelihood of an attack targeted at a journalist. I hypothesize that some states have more incidents than others. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is states. The outcome variable I will measure is which states in the U.S. have the most attacks on journalists, and if this correlates to dominant ideologies in those states. The observed pattern will be correlation between states and attacks on journalists.</p>
+<h2 id="introduction">Introduction</h2>
+<p>Is there a correlation between attacks on journalists and location? In this study, I will use the U.S. Press Freedom Tracker’s Incidents Database (<a href="https://pressfreedomtracker.us/all-incidents/?endpage=3" class="uri">https://pressfreedomtracker.us/all-incidents/?endpage=3</a>) to measure if the likelihood of an attack targeted at a journalist correlates to location in the United States, looking specifically at region and state. I hypothesize that some states have more incidents than others. The first variable I will use is attacks on journalists in the U.S. The next variable I will use is states. The variable I will create is region, using the states variable. The outcome variable I will measure is which states or regions in the U.S. have the most attacks on journalists. The observed pattern will be correlation between U.S. location and attacks on journalists.</p>
+<h2 id="data">Data</h2>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span></span></code></pre>
-</div>
-</div>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>incidents</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"~/incidents.csv"</span><span class='op'>)</span></span>
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span></span>
+<span><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/tidymodels/infer'>infer</a></span><span class='op'>)</span></span>
+<span><span class='va'>incidents</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"~/incidents.csv"</span><span class='op'>)</span></span>
 <span><span class='va'>incidents</span></span></code></pre>
 </div>
 <pre><code># A tibble: 2,027 × 61
@@ -1576,14 +1574,6 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 #   authors &lt;lgl&gt;, date &lt;date&gt;, exact_date_unknown &lt;lgl&gt;, city &lt;chr&gt;,
 #   state &lt;chr&gt;, latitude &lt;chr&gt;, longitude &lt;chr&gt;, body &lt;chr&gt;, …</code></pre>
 </div>
-cces |&gt;
-mutate(educ_ordinal = case_when(educ==“No HS” ~ 0,
-educ==“High school graduate” ~ 1,
-educ==“Some college” ~ 2,
-educ==“2-year” ~ 3,
-educ==“4-year” ~ 4,
-educ==“Post-grad” ~ 5,)) |&gt;
-select(educ, educ_ordinal)
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>incidents_region</span> <span class='op'>&lt;-</span> <span class='va'>incidents</span> <span class='op'>|&gt;</span></span>
@@ -1650,10 +1640,11 @@ select(educ, educ_ordinal)
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>journalist_targeted_number <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/case_when.html'>case_when</a></span><span class='op'>(</span><span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"no"</span> <span class='op'>~</span> <span class='fl'>0</span>,</span>
 <span>                                                <span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"None"</span> <span class='op'>~</span> <span class='fl'>0</span>,</span>
 <span>                                                <span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"unknown"</span> <span class='op'>~</span> <span class='fl'>1</span>,</span>
-<span>                                                <span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"yes"</span> <span class='op'>~</span> <span class='fl'>2</span><span class='op'>)</span><span class='op'>)</span></span>
+<span>                                                <span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"yes"</span> <span class='op'>~</span> <span class='fl'>2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>journalist_targeted_yes_no <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/if_else.html'>if_else</a></span><span class='op'>(</span><span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"yes"</span>, <span class='st'>"Targeted"</span>, <span class='st'>"Not Targeted"</span><span class='op'>)</span><span class='op'>)</span></span>
 <span><span class='va'>incidents_region</span></span></code></pre>
 </div>
-<pre><code># A tibble: 2,027 × 64
+<pre><code># A tibble: 2,027 × 65
    first_published_at  last_published_at   title                 slug 
    &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;                 &lt;chr&gt;
  1 2024-10-23 18:22:35 2024-10-28 15:54:48 Student journalist d… http…
@@ -1667,32 +1658,12 @@ select(educ, educ_ordinal)
  9 2024-10-17 19:13:56 2024-10-17 19:13:56 Journalist briefly d… http…
 10 2024-10-31 17:49:48 2024-10-31 17:49:48 Journalist who publi… http…
 # ℹ 2,017 more rows
-# ℹ 60 more variables: latest_revision_created_at &lt;dttm&gt;,
+# ℹ 61 more variables: latest_revision_created_at &lt;dttm&gt;,
 #   charges &lt;chr&gt;, legal_orders &lt;chr&gt;, updates &lt;chr&gt;,
 #   categories &lt;chr&gt;, links &lt;lgl&gt;, equipment_seized &lt;chr&gt;,
 #   equipment_broken &lt;chr&gt;, targeted_journalists &lt;chr&gt;,
 #   authors &lt;lgl&gt;, date &lt;date&gt;, exact_date_unknown &lt;lgl&gt;, city &lt;chr&gt;,
 #   state &lt;chr&gt;, latitude &lt;chr&gt;, longitude &lt;chr&gt;, body &lt;chr&gt;, …</code></pre>
-</div>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>incidents_region</span> <span class='op'>|&gt;</span></span>
-<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span><span class='va'>state</span>, <span class='va'>Region</span><span class='op'>)</span></span></code></pre>
-</div>
-<pre><code># A tibble: 2,027 × 2
-   state             Region   
-   &lt;chr&gt;             &lt;chr&gt;    
- 1 Minnesota (MN)    Midwest  
- 2 Pennsylvania (PA) Northeast
- 3 Indiana (IN)      Midwest  
- 4 Indiana (IN)      Midwest  
- 5 Indiana (IN)      Midwest  
- 6 Indiana (IN)      Midwest  
- 7 California (CA)   West     
- 8 Ohio (OH)         Midwest  
- 9 New York (NY)     Northeast
-10 Wisconsin (WI)    Midwest  
-# ℹ 2,017 more rows</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
@@ -1704,7 +1675,7 @@ select(educ, educ_ordinal)
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"U.S. Region"</span>, y <span class='op'>=</span> <span class='st'>"Was Journalist Targeted"</span>, title <span class='op'>=</span> <span class='st'>"Incidents of U.S. Journalists Targeted By Region"</span><span class='op'>)</span></span>
 <span><span class='va'>incidents_plot_region</span></span></code></pre>
 </div>
-<p><img src="index_files/figure-html5/unnamed-chunk-5-1.png" width="624" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-3-1.png" width="624" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
@@ -1713,22 +1684,3086 @@ select(educ, educ_ordinal)
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span><span class='op'>(</span><span class='va'>state</span>, na.rm <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>was_journalist_targeted</span>, y <span class='op'>=</span> <span class='va'>state</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span></span>
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_boxplot.html'>geom_boxplot</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span></span>
-<span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"Was Journalist Targeted"</span>, y <span class='op'>=</span> <span class='st'>"State"</span>, title <span class='op'>=</span> <span class='st'>"Incidents of U.S. Journalists Targeted By State"</span><span class='op'>)</span></span>
+<span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"Was Journalist Targeted"</span>, y <span class='op'>=</span> <span class='st'>"U.S. State"</span>, title <span class='op'>=</span> <span class='st'>"Incidents of U.S. Journalists Targeted By State"</span><span class='op'>)</span></span>
 <span><span class='va'>incidents_plot_state</span></span></code></pre>
 </div>
-<p><img src="index_files/figure-html5/unnamed-chunk-6-1.png" width="624" /></p>
+<p><img src="index_files/figure-html5/unnamed-chunk-4-1.png" width="624" /></p>
+</div>
+<h2 id="results">Results</h2>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>incidents_table_state</span> <span class='op'>&lt;-</span> <span class='va'>incidents_region</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>was_journalist_targeted</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/reframe.html'>reframe</a></span><span class='op'>(</span><span class='va'>state</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"yes"</span><span class='op'>)</span></span>
+<span><span class='va'>incidents_table_state</span></span></code></pre>
+</div>
+<pre><code># A tibble: 757 × 2
+   was_journalist_targeted state            
+   &lt;chr&gt;                   &lt;chr&gt;            
+ 1 yes                     Pennsylvania (PA)
+ 2 yes                     Ohio (OH)        
+ 3 yes                     New York (NY)    
+ 4 yes                     North Dakota (ND)
+ 5 yes                     New York (NY)    
+ 6 yes                     Pennsylvania (PA)
+ 7 yes                     California (CA)  
+ 8 yes                     California (CA)  
+ 9 yes                     Texas (TX)       
+10 yes                     Illinois (IL)    
+# ℹ 747 more rows</code></pre>
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='fu'>knitr</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/knitr/man/kable.html'>kable</a></span><span class='op'>(</span><span class='va'>incidents_table_state</span>, col.names <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Was Journalist Targeted"</span>, <span class='st'>"U.S. State"</span><span class='op'>)</span><span class='op'>)</span></span></code></pre>
+</div>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Was Journalist Targeted</th>
+<th style="text-align: left;">U.S. State</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Dakota (ND)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wyoming (WY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New Jersey (NJ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kansas (KS)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arizona (AZ)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Alaska (AK)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Louisiana (LA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Alabama (AL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maine (ME)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Nevada (NV)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Puerto Rico (PR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Puerto Rico (PR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Puerto Rico (PR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">West Virginia (WV)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maine (ME)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Louisiana (LA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Louisiana (LA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Rhode Island (RI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Mississippi (MS)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Dakota (ND)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Dakota (ND)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Utah (UT)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arizona (AZ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Delaware (DE)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Iowa (IA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Wisconsin (WI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New Jersey (NJ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Iowa (IA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Iowa (IA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Nebraska (NE)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Iowa (IA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Alabama (AL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Alabama (AL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Pennsylvania (PA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arkansas (AR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Nevada (NV)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">South Carolina (SC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Delaware (DE)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">South Carolina (SC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">South Carolina (SC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arizona (AZ)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Nevada (NV)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Nevada (NV)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arizona (AZ)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arizona (AZ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Puerto Rico (PR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Puerto Rico (PR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Arizona (AZ)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Hawaii (HI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Kentucky (KY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New Jersey (NJ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Colorado (CO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Ohio (OH)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Utah (UT)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Utah (UT)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Massachusetts (MA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New Jersey (NJ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Michigan (MI)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Finland</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Oregon (OR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Iowa (IA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Puerto Rico (PR)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Maryland (MD)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New Jersey (NJ)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New Jersey (NJ)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Alabama (AL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Washington (WA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Missouri (MO)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Texas (TX)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Carolina (NC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Virginia (VA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Minnesota (MN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Montana (MT)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Alaska (AK)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Tennessee (TN)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">California (CA)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Dakota (ND)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">District of Columbia (DC)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Illinois (IL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">North Dakota (ND)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Florida (FL)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">New York (NY)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">yes</td>
+<td style="text-align: left;">Georgia (GA)</td>
+</tr>
+</tbody>
+</table>
 </div>
 <p>California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>incidents_table</span> <span class='op'>&lt;-</span> <span class='va'>incidents_region</span> <span class='op'>|&gt;</span></span>
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>incidents_table_region</span> <span class='op'>&lt;-</span> <span class='va'>incidents_region</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>was_journalist_targeted</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
-<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span><span class='va'>Region</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/reframe.html'>reframe</a></span><span class='op'>(</span><span class='va'>Region</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>was_journalist_targeted</span> <span class='op'>==</span> <span class='st'>"yes"</span><span class='op'>)</span></span>
-<span><span class='va'>incidents_table</span></span></code></pre>
+<span><span class='va'>incidents_table_region</span></span></code></pre>
 </div>
 <pre><code># A tibble: 757 × 2
-# Groups:   was_journalist_targeted [1]
    was_journalist_targeted Region   
    &lt;chr&gt;                   &lt;chr&gt;    
  1 yes                     Northeast
@@ -1743,13 +4778,13 @@ select(educ, educ_ordinal)
 10 yes                     Midwest  
 # ℹ 747 more rows</code></pre>
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span><span class='fu'>knitr</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/knitr/man/kable.html'>kable</a></span><span class='op'>(</span><span class='va'>incidents_table</span>, col.names <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Was Journalist Targeted"</span>, <span class='st'>"Region"</span><span class='op'>)</span><span class='op'>)</span></span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='fu'>knitr</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/knitr/man/kable.html'>kable</a></span><span class='op'>(</span><span class='va'>incidents_table_region</span>, col.names <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Was Journalist Targeted"</span>, <span class='st'>"U.S. Region"</span><span class='op'>)</span><span class='op'>)</span></span></code></pre>
 </div>
 <table>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Was Journalist Targeted</th>
-<th style="text-align: left;">Region</th>
+<th style="text-align: left;">U.S. Region</th>
 </tr>
 </thead>
 <tbody>
@@ -4784,7 +7819,25 @@ select(educ, educ_ordinal)
 </tbody>
 </table>
 </div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<p>The region West has the most incidents of attacks targeted at journalists. I can hypothesize that this is because this region includes both California and Oregon, which had two of the highest number of targeted attacks on journalists according to the previous table. The next highest was Northeast, which I can hypothesize is because it includes District of Columbia and New York.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='fu'><a href='https://rdrr.io/r/stats/lm.html'>lm</a></span><span class='op'>(</span><span class='va'>journalist_targeted_number</span> <span class='op'>~</span> <span class='va'>Region</span>, data <span class='op'>=</span> <span class='va'>incidents_region</span><span class='op'>)</span></span></code></pre>
+</div>
+<pre><code>
+Call:
+lm(formula = journalist_targeted_number ~ Region, data = incidents_region)
+
+Coefficients:
+    (Intercept)  RegionNortheast      Regionother  RegionSoutheast  
+         0.8741          -0.1306          -0.4074          -0.1651  
+RegionSouthwest       RegionWest  
+        -0.3641           0.2264  </code></pre>
+</div>
+<p>The region West has a coefficient of 1.190e+00, which is the highest of all the regions. This is significant because the West had the highest number of targeted attacks on journalists, meaning we can interpret the data causally.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>My hypothesis was that there would be a correlation between location and targeted attacks on journalist across the U.S. After interpreting the data, I can conclude that there is a correlation. The graphs and tables show that the West region had the most incidents of attacks targeted against journalist, as well as state with big cities. I can conclude that there is a correlation, however, this cannot be interpreted causally because it does not factor in other variables, such as if protests occurred around the time of the incidents, or if other significant events happened that may have given another reason for the targeted attacks.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
