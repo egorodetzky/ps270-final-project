@@ -41,8 +41,10 @@ incidents_region <- incidents |>
                             state == "Wyoming (WY)" ~ 0,
                             state == "Utah (UT)" ~ 0,
                             state == "Colorado (CO)" ~ 0,
+                            state == "Alaska (AK)" ~ 0,
+                            state == "Hawaii (HI)" ~ 0,
                             state == "Arizona (AZ)" ~ 1,
-                            state == "New Mexico(NM)" ~ 1,
+                            state == "New Mexico (NM)" ~ 1,
                             state == "Texas (TX)" ~ 1,
                             state == "Oklahoma (OK)" ~ 1,
                             state == "North Dakota (ND)" ~ 2,
@@ -57,12 +59,13 @@ incidents_region <- incidents |>
                             state == "Michigan (MI)" ~ 2,
                             state == "Indiana (IN)" ~ 2,
                             state == "Ohio (OH)" ~ 2,
+                            state == "Nebraska (NE)" ~ 2,
                             state == "Arkansas (AR)" ~ 3,
                             state == "Louisiana (LA)" ~ 3,
                             state == "Mississippi (MS)" ~ 3,
                             state == "Alabama (AL)" ~ 3,
                             state == "Kentucky (KY)" ~ 3,
-                            state == "Tennesee (TN)" ~ 3,
+                            state == "Tennessee (TN)" ~ 3,
                             state == "Georgia (GA)" ~ 3,
                             state == "Florida (FL)" ~ 3,
                             state == "West Virginia (WV)" ~ 3,
@@ -79,19 +82,36 @@ incidents_region <- incidents |>
                             state == "New Jersey (NJ)" ~ 4,
                             state == "Pennsylvania (PA)" ~ 4,
                             state == "Maryland (MD)" ~ 4,
-                            state == "Delaware (DE)" ~ 4))
+                            state == "Delaware (DE)" ~ 4,
+                            state == "District of Columbia (DC)" ~ 4,
+                            state == "Puerto Rico (PR)" ~ 5,
+                            state == "None" ~ 5)) |>
+  mutate(Region = case_when(region == 0 ~ "West",
+                            region == 1 ~ "Southwest",
+                            region == 2 ~ "Midwest",
+                            region == 3 ~ "Southeast",
+                            region == 4 ~ "Northeast",
+                            region == 5 ~ "other")) |>
+  mutate(journalist_targeted_number = case_when(was_journalist_targeted == "no" ~ 0,
+                                                was_journalist_targeted == "None" ~ 0,
+                                                was_journalist_targeted == "unknown" ~ 1,
+                                                was_journalist_targeted == "yes" ~ 2))
 incidents_region
 ```
 ```{r}
-incidents_plot_region <- incidents_region |>
-  group_by(was_journalist_targeted) |>
-  summarize(region) |>
-  ggplot(aes(x = was_journalist_targeted, y = region)) +
-  geom_col() +
-  labs(x = "Was Journalist Targeted", y = "U.S. Region", title = "Incidents of U.S. Journalists Targeted By State")
-incidents_plot_region
+incidents_region |>
+  summarize(state, Region)
 ```
 
+```{r}
+incidents_plot_region <- incidents_region |>
+  group_by(journalist_targeted_number) |>
+  summarize(Region, na.rm = TRUE) |>
+  ggplot(aes(x = Region, y = journalist_targeted_number)) +
+  geom_col() +
+  labs(x = "U.S. Region", y = "Was Journalist Targeted", title = "Incidents of U.S. Journalists Targeted By Region")
+incidents_plot_region
+```
 
 
 ```{r}
@@ -107,10 +127,11 @@ incidents_plot_state
 California, District of Columbia, Florida, Illinois, Michigan, Minnesota, New York, and Oregon were some of the states that had a larger number of incidents where journalists were targeted. I can hypothesize that this is because these states all contain big cities.
 
 ```{r}
-incidents_table <- incidents |>
-  group_by(was_journalist_targeted, state) |>
-  summarize(was_journalist_targeted, state)
+incidents_table <- incidents_region |>
+  group_by(was_journalist_targeted) |>
+  summarize(Region) |>
+  filter(was_journalist_targeted == "yes")
 incidents_table
 
-knitr::kable(incidents_table)
+knitr::kable(incidents_table, col.names = c("Was Journalist Targeted", "Region"))
 ```
